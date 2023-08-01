@@ -1,8 +1,8 @@
-class Editor:
-    """Editor interface"""
+class Validator:
+    """Validator interface"""
     
     def __init__(self):
         pass
 
     def get():
-        return Editor()
+        return Validator()
