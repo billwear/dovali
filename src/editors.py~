@@ -1,8 +1,0 @@
-class Editor:
-    """Editor interface"""
-    
-    def __init__(self):
-        pass
-
-    def get():
-        return Editor()

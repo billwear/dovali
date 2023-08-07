@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+
+parser = argparse.ArgumentParser(
+    prog="dovali",
+    description="End-to-end document preparation tool",
+    epilog="Something to say at the end of the help listing",
+)
+
+parser.add_argument(
+    "-f", dest="filename", help="file to process (mandatory)", required=True
+)
+parser.add_argument("-l", action="store_true", help="check links")
+parser.add_argument("-q", action="store_true", help="check writing quality")
+parser.add_argument("-s", action="store_true", help="check spelling")
+
+args = parser.parse_args()
+if args.s == True:
+    result = subprocess.run(
+        ["hunspell", "-l", args.filename],
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    if result.stdout:
+        print("Potentially misspelled words:")
+        print(result.stdout)
+if args.q == True:
+    result = subprocess.run(
+        ["write-good", args.filename],
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    if result.stdout:
+        print("Potential writing errors:")
+        print(result.stdout)
+if args.l == True:
+    result = subprocess.run(
+        ["markdown-link-check", "-q", args.filename],
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+    )
+    if result.stdout:
+        print("Broken links:")
+        print(result.stdout)

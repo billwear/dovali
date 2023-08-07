@@ -1,7 +1,0 @@
-setup.py
-src/dovali.egg-info/PKG-INFO
-src/dovali.egg-info/SOURCES.txt
-src/dovali.egg-info/dependency_links.txt
-src/dovali.egg-info/entry_points.txt
-src/dovali.egg-info/requires.txt
-src/dovali.egg-info/top_level.txt
