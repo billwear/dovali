@@ -1,46 +1,127 @@
 #!/usr/bin/env python3
+#
+# DOcument VAlidator and LInter
+#
 
+## imports in alpha order by module
 import argparse
-import subprocess
+import signal
+from subprocess import PIPE, run
+import sys
+import tempfile
+from traceback import print_exc, format_exc
 
-parser = argparse.ArgumentParser(
-    prog="dovali",
-    description="End-to-end document preparation tool",
-    epilog="Something to say at the end of the help listing",
-)
+## functions in alpha order
 
-parser.add_argument(
-    "-f", dest="filename", help="file to process (mandatory)", required=True
-)
-parser.add_argument("-l", action="store_true", help="check links")
-parser.add_argument("-q", action="store_true", help="check writing quality")
-parser.add_argument("-s", action="store_true", help="check spelling")
 
-args = parser.parse_args()
-if args.s == True:
-    result = subprocess.run(
-        ["hunspell", "-l", args.filename],
-        encoding="utf-8",
-        stdout=subprocess.PIPE,
+# main
+def main():
+    parser = argparse.ArgumentParser(
+        prog="dovali",
+        description="DOcument VAlidator and LInter 0.2",
+        epilog='Use quotes to include any desired arguments for the commands passed with options -s, -d, -l, or -v; for example: "myspellchecker -d en_BR".  Note: this alpha version does not currently run interactive validators correctly.',
     )
-    if result.stdout:
-        print("Potentially misspelled words:")
-        print(result.stdout)
-if args.q == True:
-    result = subprocess.run(
-        ["write-good", args.filename],
-        encoding="utf-8",
-        stdout=subprocess.PIPE,
+    parser.add_argument(
+        "-i",
+        "--input_file",
+        help="input file (def: stdin)",
+        default=sys.stdin,
     )
-    if result.stdout:
-        print("Potential writing errors:")
-        print(result.stdout)
-if args.l == True:
-    result = subprocess.run(
-        ["markdown-link-check", "-q", args.filename],
-        encoding="utf-8",
-        stdout=subprocess.PIPE,
+    parser.add_argument(
+        "-o",
+        "--output_file",
+        help="output file (def: stdout)",
+        default=sys.stdout,
     )
-    if result.stdout:
-        print("Broken links:")
-        print(result.stdout)
+    parser.add_argument(
+        "-s",
+        "--spellchecker",
+        help='run "spellchecker" on IN (def: spell)',
+        default="spell",
+    )
+    parser.add_argument(
+        "-d",
+        "--dictiontool",
+        help='run "dictiontool" on IN (def: writegood)',
+        default="writegood",
+    )
+    parser.add_argument(
+        "-l",
+        "--linkchecker",
+        help='run "linkchecker" on IN (def: markdown-link-check)',
+        default="markdown-link-check",
+    )
+    parser.add_argument(
+        "-v",
+        "--validator",
+        help='run "validator" on IN (def: None)',
+        default=None,
+    )
+    parser.add_argument(
+        "-r", action="store_true", help="print raw output from validators"
+    )
+
+    args = parser.parse_args()
+
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    if args.input_file is sys.stdin:
+        fp = tempfile.NamedTemporaryFile(mode="w")
+        data = args.input_file.read()
+        fp.write(data)
+        filename = fp.name
+    else:
+        filename = args.input_file
+
+    if args.output_file is sys.stdout:
+        pass
+    else:
+        f = open(args.output_file, "w")
+        orig_stdout = sys.stdout
+        sys.stdout = f
+
+    cmdargs = [args.spellchecker, filename]
+    result = runcmd(cmdargs, args.r)
+
+    # if result != None:
+    #     print(result)
+
+    cmdargs = [args.dictiontool, filename]
+    results = runcmd(cmdargs, args.r)
+    # if result != None:
+    #     print(result)
+
+    cmdargs = [args.linkchecker, filename]
+    results = runcmd(cmdargs, args.r)
+    # if result != None:
+    #     print(result)
+
+    cmdargs = [args.validator, filename]
+    results = runcmd(cmdargs, args.r)
+
+
+# runcmd: once place for subprocess.run
+def runcmd(args, raw):
+    print("running command line:", args)
+    try:
+        result = run(
+            args,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
+        if raw == True:
+            print(result.stdout.decode())
+        return result.stdout.decode()
+    except:
+        print("an error resulted")
+        exceptiondata = format_exc().splitlines()
+        print(exceptiondata[-1])
+
+
+# SIGINT handler
+def sigint_handler(sig, frame):
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
