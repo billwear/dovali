@@ -5,6 +5,7 @@
 
 ## imports in alpha order by module
 import argparse
+import os
 import signal
 from subprocess import PIPE, run
 import sys
@@ -54,8 +55,14 @@ def main():
     parser.add_argument(
         "-v",
         "--validator",
-        help='run "validator" on IN (def: None)',
-        default=None,
+        help='run "validator" on IN (def: #)',
+        default="#",
+    )
+    parser.add_argument(
+        "-e",
+        "--editor",
+        help='run "validator" on IN (def: emacs)',
+        default="emacs",
     )
     parser.add_argument(
         "-r", action="store_true", help="print raw output from validators"
@@ -65,6 +72,11 @@ def main():
 
     signal.signal(signal.SIGINT, sigint_handler)
 
+    editor = os.getenv("EDITOR")
+    if editor == None:
+        os.environ["EDITOR"] = "emacs"
+        editor = os.getenv("EDITOR")
+
     if args.input_file is sys.stdin:
         fp = tempfile.NamedTemporaryFile(mode="w")
         data = args.input_file.read()
@@ -72,6 +84,9 @@ def main():
         filename = fp.name
     else:
         filename = args.input_file
+        print(filename)
+        cmdargs = [editor, filename]
+        runcmd(cmdargs, False)
 
     if args.output_file is sys.stdout:
         pass
