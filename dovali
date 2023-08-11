@@ -20,7 +20,7 @@ def main():
     parser = argparse.ArgumentParser(
         prog="dovali",
         description="DOcument VAlidator and LInter 0.2",
-        epilog='Use quotes to include any desired arguments for the commands passed with options -s, -d, -l, or -v; for example: "myspellchecker -d en_BR".  Note: this alpha version does not currently run interactive validators correctly.',
+        epilog='Use quotes to include any desired arguments for the commands passed with options -s, -d, -l, or -v; for example: "myspellchecker -d en_BR".  Note: this beta version does not currently run interactive validators correctly.',
     )
     parser.add_argument(
         "-i",
@@ -59,12 +59,6 @@ def main():
         default="#",
     )
     parser.add_argument(
-        "-e",
-        "--editor",
-        help='run "validator" on IN (def: emacs)',
-        default="emacs",
-    )
-    parser.add_argument(
         "-r", action="store_true", help="print raw output from validators"
     )
 
@@ -72,10 +66,10 @@ def main():
 
     signal.signal(signal.SIGINT, sigint_handler)
 
-    editor = os.getenv("EDITOR")
-    if editor == None:
-        os.environ["EDITOR"] = "emacs"
-        editor = os.getenv("EDITOR")
+    # editor = os.getenv("EDITOR")
+    # if editor == None:
+    #     os.environ["EDITOR"] = "emacs"
+    #     editor = os.getenv("EDITOR")
 
     if args.input_file is sys.stdin:
         fp = tempfile.NamedTemporaryFile(mode="w")
@@ -84,9 +78,9 @@ def main():
         filename = fp.name
     else:
         filename = args.input_file
-        print(filename)
-        cmdargs = [editor, filename]
-        runcmd(cmdargs, False)
+        # print(filename)
+        # cmdargs = [editor, filename]
+        # runcmd(cmdargs, False)
 
     if args.output_file is sys.stdout:
         pass
@@ -111,8 +105,11 @@ def main():
     # if result != None:
     #     print(result)
 
-    cmdargs = [args.validator, filename]
-    results = runcmd(cmdargs, args.r)
+    if args.validator == "#":
+        pass
+    else:
+        cmdargs = [args.validator, filename]
+        results = runcmd(cmdargs, args.r)
 
 
 # runcmd: once place for subprocess.run
